@@ -1,0 +1,86 @@
+{% extends 'base/main.html' %}
+{% load static %}
+{% block content %}
+
+<main>
+
+    <section id="form-container">
+
+        <img id="logo" src="{% static 'images/chat-icon.png' %}"/>
+
+        <div id="welcome-message">
+            <h1>Reúna-se</h1>
+            <p>Faça suas reuniões de forma mais simples</p>
+        </div>
+
+        <form id="form">
+            <div class="field-wrapper">
+
+                <div class="form-field">
+                    <label>SALA:</label>
+                    <input name="room" placeholder="Nome da sala..."  style="text-transform:uppercase"/>
+                </div>
+
+                <div class="form-field">
+                    <label>NOME:</label>
+                    <input name="name" placeholder="Digite seu nome..."  style="text-transform:uppercase"/>
+                </div>
+
+                <div class="form-field">
+                    <input type="submit" value="Entrar" />
+                </div>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script>
+    let form = document.getElementById('form')
+
+    let handleSubmit = async (e) => {
+        e.preventDefault()
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+            function (position) {
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+
+                console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+
+                // You can use latitude and longitude here, for example, to display on a map
+            },
+            function (error) {
+                console.error("Error getting user location:", error.message);
+                // Handle error scenarios here
+            }
+        );
+        } else {
+            console.error("Geolocation is not supported in this browser");
+            // Handle scenarios where geolocation is not supported
+        }
+        let room = e.target.room.value.toUpperCase()
+        let name = e.target.name.value
+
+        let response = await fetch(`/get_token/?channel=${room}`)
+        let data = await response.json()
+
+        let UID = data.uid
+        let token = data.token
+
+        sessionStorage.setItem('UID', UID)
+        sessionStorage.setItem('token', token)
+        sessionStorage.setItem('room', room)
+        sessionStorage.setItem('name', name)
+        sessionStorage.setItem('lat', '123')
+        sessionStorage.setItem('lng', '321')
+
+        window.open('/room/', '_self')
+    }
+
+
+
+    form.addEventListener('submit', handleSubmit)
+</script>
+
+{% endblock content %}
+

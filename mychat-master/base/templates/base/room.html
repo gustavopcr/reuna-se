@@ -1,0 +1,122 @@
+{% extends 'base/main.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    let latitude = -1
+    let longitude = -1
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+
+                console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+
+                // You can use latitude and longitude here, for example, to display on a map
+            },
+            function (error) {
+                console.error("Error getting user location:", error.message);
+                // Handle error scenarios here
+            }
+        );
+    } else {
+        console.error("Geolocation is not supported in this browser");
+        // Handle scenarios where geolocation is not supported
+    }
+</script>
+    <style>
+        #map {
+            height: 90%;
+            align-self: center;
+            width: 100%;
+            border: 1px solid #ccc; /* Border style */
+        /* Optionally, set other styles like padding, margin, etc. */
+        }
+    </style>
+<main>
+    <section id="room-name-wrapper">
+        <p>Room Name: <span id="room-name"></span></p>
+    </section>
+    
+    <div class="room-container">
+        <section id="video-streams">
+            <section id="controls-wrapper">
+                <div class="icon-wrapper">
+                    <img class="control-icon" id="mic-btn" src="{% static 'images/microphone.svg' %}" />
+                </div>
+        
+                <div class="icon-wrapper">
+                    <img class="control-icon" id="camera-btn" src="{% static 'images/video.svg' %}" />
+                </div>
+        
+                <div class="icon-wrapper">
+                    <img class="control-icon" id="leave-btn" src="{% static 'images/leave.svg' %}" />
+                </div>
+            </section>
+        </section>
+    
+        <div id="map"></div>
+    </div>
+
+    <script>
+                // Initialize the map
+        var map = L.map('map').setView([0, 0], 2); // Default center and zoom
+
+        // Add OpenStreetMap tiles as the base layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+
+        // Function to fetch and update user locations on the map (polling every few seconds)
+        // Function to update user locations on the map
+        function updateUserLocations(locations) {
+            // Clear existing markers from the map
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Add markers for updated user locations
+            locations.forEach(location => {
+                L.marker([location.lat, location.lng]).addTo(map);
+            });
+        }
+
+        function fetchAndUpdateUserLocations() {
+            fetch('http://localhost:8000/get_user_locations/')  // Make an HTTP GET request to Django backend
+                .then(response => response.json())
+                .then(data => {
+                    // Assuming 'data.locations' contains updated location information
+                    updateUserLocations(data.locations); // Call function to update user locations on the map
+                })
+            .catch(error => {
+                console.error('Error fetching user locations:', error);
+            });
+        }
+        
+        // Periodically fetch user locations (every 5 seconds, for example)
+        setInterval(fetchAndUpdateUserLocations, 5000); // Adjust the interval as needed
+        
+        // Sample user locations (replace this with actual data from your database)
+        /*
+        var userLocations = [
+            [40.7128, -74.0060], // Example location 1 (New York)
+            [34.0522, -118.2437], // Example location 2 (Los Angeles)
+            // Add more user locations here
+        ];
+        */
+    </script>
+</main>
+
+
+<script type="text/javascript" src="{% static 'assets/AgoraRTC_N-4.19.3.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/streams.js' %}" ></script>
+<script>
+    console.log('sessionStorage: ')
+    console.log(sessionStorage.getItem('lng'))
+</script>
+{% endblock content %}
