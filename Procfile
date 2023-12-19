@@ -1,1 +1,1 @@
-python .\mychat-master\manage.py runserver
+web: python .\mychat-master\manage.py runserver
